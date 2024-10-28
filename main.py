@@ -11,7 +11,14 @@ from crawler import scrapers_registry
 
 load_dotenv()
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 driver_options = webdriver.FirefoxOptions()
 driver_options.add_argument("--headless")
 webdriver_timeout = 20
@@ -30,12 +37,6 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    create_db_and_tables()
-    yield
 
 
 @app.get("/product/{keyword}")
