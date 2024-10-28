@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import unicodedata
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -38,10 +39,10 @@ def crawl_search_term_carrefour(
         product = elem["item"]
         final_products.append(
             {
-                "name": product["name"],
-                "brand": product["brand"]["name"],
+                "name": normalize_str(product["name"]),
+                "brand": normalize_str(product["brand"]["name"]),
                 "image_url": product["image"],
-                "description": product["description"],
+                "description": normalize_str(product["description"]),
                 "web_id": product["gtin"],
                 "price": product["offers"]["highPrice"],
                 "supermarket": "carrefour",
@@ -78,10 +79,10 @@ def crawl_remaining_pages_carrefour(
                 product = elem["item"]
                 final_products.append(
                     {
-                        "name": product["name"],
-                        "brand": product["brand"]["name"],
+                        "name": normalize_str(product["name"]),
+                        "brand": normalize_str(product["brand"]["name"]),
                         "image_url": product["image"],
-                        "description": product["description"],
+                        "description": normalize_str(product["description"]),
                         "web_id": product["gtin"],
                         "price": product["offers"]["highPrice"],
                         "supermarket": "carrefour",
@@ -133,3 +134,13 @@ def save_to_db(product_list, db_session):
             db_session.add(product)
 
     db_session.commit()
+
+
+def normalize_str(input: str) -> str:
+    return "".join(
+        [
+            c
+            for c in unicodedata.normalize("NFKD", input)
+            if not unicodedata.combining(c)
+        ]
+    )
