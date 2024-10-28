@@ -1,0 +1,31 @@
+services:
+    postgres:
+        image: postgres:17
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: postgres
+        volumes:
+            - postgres-db-volume:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD", "pg_isready", "-U", "postgres"]
+            interval: 10s
+            retries: 5
+            start_period: 5s
+        restart: always
+    
+    api:
+        build: .
+        ports: 
+            - "8000:8000"
+        user: api
+        entrypoint: ["/home/api/api_code/entrypoint.sh"]
+        # command: tail -F /dev/null
+        volumes:
+            - ./:/home/api/api_code
+        depends_on:
+            postgres:
+                condition: service_healthy
+
+volumes:
+    postgres-db-volume:
