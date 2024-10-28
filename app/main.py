@@ -10,7 +10,7 @@ from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from sqlmodel import SQLModel, create_engine, Session, select
 from crawler import scrapers_registry
 
-load_dotenv(dotenv_path="../")
+load_dotenv(dotenv_path="/home/api/api_code/.env")
 
 
 @asynccontextmanager
