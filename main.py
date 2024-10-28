@@ -1,11 +1,12 @@
 import os
 import datetime
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from dbmodels import Product
 from dotenv import load_dotenv
 from typing import Annotated, List
 from contextlib import asynccontextmanager
-from fastapi import BackgroundTasks, Depends, FastAPI
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from sqlmodel import SQLModel, create_engine, Session, select
 from crawler import scrapers_registry
 
@@ -48,13 +49,9 @@ def query_product(
     timestamp = datetime.datetime.now()
 
     if len(products_from_db) > 0:
-        print("returning from db")
-        print(len(products_from_db))
         one_week_delta = timestamp - datetime.timedelta(days=7)
         first = products_from_db[0]
         if first.last_updated < one_week_delta:
-            print("lastupdated", first.last_updated)
-            print("delta", one_week_delta)
             for website, (_, scrape_next) in scrapers_registry.items():
                 background_tasks.add_task(
                     scrape_next,
@@ -68,13 +65,18 @@ def query_product(
         return [product.model_dump() for product in products_from_db]
     else:
         for website, (scrape_first, scrape_next) in scrapers_registry.items():
-            next_link = scrape_first(
-                keyword,
-                webdriver.Firefox(options=driver_options),
-                webdriver_timeout,
-                session,
-                timestamp,
-            )
+            try:
+                next_link = scrape_first(
+                    keyword,
+                    webdriver.Firefox(options=driver_options),
+                    webdriver_timeout,
+                    session,
+                    timestamp,
+                )
+            except (WebDriverException, TimeoutException):
+                raise HTTPException(
+                    status_code=404, detail=f"No items found with keyword {keyword}"
+                )
 
             if next_link is not None:
                 background_tasks.add_task(
@@ -86,11 +88,8 @@ def query_product(
                     timestamp,
                 )
         products = [product.model_dump() for product in session.exec(query).all()]
-        return (
-            products
-            if len(products) > 0
-            else {
-                "error": "error-0",
-                "message": f"No products found with keyword: {keyword}",
-            }
+        if len(products) > 0:
+            return products
+        raise HTTPException(
+            status_code=404, detail=f"No items found with keyword {keyword}"
         )
