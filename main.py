@@ -85,5 +85,12 @@ def query_product(
                     session,
                     timestamp,
                 )
-
-        return [product.model_dump() for product in session.exec(query).all()]
+        products = [product.model_dump() for product in session.exec(query).all()]
+        return (
+            products
+            if len(products) > 0
+            else {
+                "error": "error-0",
+                "message": f"No products found with keyword: {keyword}",
+            }
+        )
