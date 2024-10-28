@@ -11,6 +11,14 @@ from sqlmodel import select
 from dbmodels import Product
 
 
+scrapers_registry = {}
+
+
+def register_scraper_pair(website_name: str, crawl_first_page, crawl_next_pages):
+    """Registers both scrape and process functions for a website."""
+    scrapers_registry[website_name] = (crawl_first_page, crawl_next_pages)
+
+
 def crawl_search_term_carrefour(
     keyword: str,
     driver: WebDriver,
@@ -101,6 +109,11 @@ def crawl_remaining_pages_carrefour(
             save_to_db(final_products, db_session)
             final_products.clear()
             break
+
+
+register_scraper_pair(
+    "carrefour", crawl_search_term_carrefour, crawl_remaining_pages_carrefour
+)
 
 
 def save_to_db(product_list, db_session):

@@ -7,7 +7,7 @@ from typing import Annotated, List
 from contextlib import asynccontextmanager
 from fastapi import BackgroundTasks, Depends, FastAPI
 from sqlmodel import SQLModel, create_engine, Session, select
-from crawler import crawl_search_term_carrefour, crawl_remaining_pages_carrefour
+from crawler import scrapers_registry
 
 load_dotenv()
 
@@ -54,33 +54,35 @@ def query_product(
         if first.last_updated < one_week_delta:
             print("lastupdated", first.last_updated)
             print("delta", one_week_delta)
-            background_tasks.add_task(
-                crawl_remaining_pages_carrefour,
-                f"https://www.carrefour.com.ar/{keyword}?",
-                webdriver.Firefox(options=driver_options),
-                webdriver_timeout,
-                session,
-                timestamp,
-            )
+            for website, (_, scrape_next) in scrapers_registry.items():
+                background_tasks.add_task(
+                    scrape_next,
+                    f"https://www.{website}.com.ar/{keyword}?",
+                    webdriver.Firefox(options=driver_options),
+                    webdriver_timeout,
+                    session,
+                    timestamp,
+                )
 
         return [product.model_dump() for product in products_from_db]
     else:
-        print("returning from selenium")
-        next_link = crawl_search_term_carrefour(
-            keyword,
-            webdriver.Firefox(options=driver_options),
-            webdriver_timeout,
-            timestamp,
-        )
-
-        if next_link is not None:
-            background_tasks.add_task(
-                crawl_remaining_pages_carrefour,
-                next_link,
+        for website, (scrape_first, scrape_next) in scrapers_registry.items():
+            next_link = scrape_first(
+                keyword,
                 webdriver.Firefox(options=driver_options),
                 webdriver_timeout,
                 session,
                 timestamp,
             )
+
+            if next_link is not None:
+                background_tasks.add_task(
+                    scrape_next,
+                    next_link,
+                    webdriver.Firefox(options=driver_options),
+                    webdriver_timeout,
+                    session,
+                    timestamp,
+                )
 
         return [product.model_dump() for product in session.exec(query).all()]
