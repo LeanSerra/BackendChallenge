@@ -1,6 +1,5 @@
 from datetime import datetime
 import json
-from typing import List, Tuple
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
