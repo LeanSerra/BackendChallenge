@@ -2,13 +2,13 @@ import os
 import datetime
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, WebDriverException
-from dbmodels import Product
+from app.dbmodels import Product
 from dotenv import load_dotenv
 from typing import Annotated, List
 from contextlib import asynccontextmanager
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from sqlmodel import SQLModel, create_engine, Session, select
-from crawler import scrapers_registry
+from app.crawler import scrapers_registry
 
 load_dotenv(dotenv_path="/home/api/api_code/.env")
 

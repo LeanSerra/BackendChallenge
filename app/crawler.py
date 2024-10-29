@@ -7,7 +7,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.common.exceptions import NoSuchElementException
 from sqlmodel import select
-from dbmodels import Product
+from app.dbmodels import Product
 
 
 scrapers_registry = {}
