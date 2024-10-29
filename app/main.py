@@ -8,7 +8,7 @@ from typing import Annotated, List
 from contextlib import asynccontextmanager
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException
 from sqlmodel import SQLModel, create_engine, Session, select
-from app.crawler import scrapers_registry
+from app.crawler import scrapers_registry, normalize_str
 
 load_dotenv(dotenv_path="/home/api/api_code/.env")
 
@@ -44,6 +44,7 @@ def create_db_and_tables():
 def query_product(
     keyword: str, session: SessionDep, background_tasks: BackgroundTasks
 ) -> List[Product]:
+    keyword = normalize_str(keyword)
     query = select(Product).where(Product.name.ilike(f"%{keyword}%"))
     products_from_db = session.exec(query).all()
     timestamp = datetime.datetime.now()
