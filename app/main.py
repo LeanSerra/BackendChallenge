@@ -44,6 +44,22 @@ def create_db_and_tables():
 def query_product(
     keyword: str, session: SessionDep, background_tasks: BackgroundTasks
 ) -> List[Product]:
+    """
+    Queries products from the database or scrapes new data if needed.
+
+    Args:
+        keyword (str): The product keyword to search for.
+        session (SessionDep): The database session dependency for executing queries.
+        background_tasks (BackgroundTasks): Background task handler for running scraping
+            tasks asynchronously.
+
+    Returns:
+        List[Product]: A list of product data in dictionary format matching the keyword.
+
+    Raises:
+        HTTPException: If no items are found matching the keyword in either the database
+            or through scraping attempts.
+    """
     keyword = normalize_str(keyword)
     query = select(Product).where(Product.name.ilike(f"%{keyword}%"))
     products_from_db = session.exec(query).all()

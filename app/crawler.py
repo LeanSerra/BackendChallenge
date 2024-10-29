@@ -25,6 +25,20 @@ def crawl_search_term_carrefour(
     db_session,
     timestamp: datetime,
 ) -> str | None:
+    """
+    Crawls the first page of Carrefour's search results for a given keyword, scrapes product data,
+    saves it to the database, and returns the link to the next page if available.
+
+    Args:
+        keyword (str): The search keyword for products.
+        driver (WebDriver): The Selenium WebDriver used for browsing the website.
+        webdriver_timeout (int): Maximum wait time for page elements to load.
+        db_session (Session): The database session used for saving products.
+        timestamp (datetime): The timestamp indicating the last update time.
+
+    Returns:
+        str | None: The URL of the next page if available, otherwise `None`.
+    """
     keyword = keyword.replace(" ", "%20")
     driver.get(f"https://www.carrefour.com.ar/{keyword}?")
     WebDriverWait(driver, webdriver_timeout).until(
@@ -63,6 +77,20 @@ def crawl_remaining_pages_carrefour(
     db_session,
     timestamp: datetime,
 ):
+    """
+    Crawls additional pages of Carrefour's product listings, scrapes product data,
+    and saves it to the database.
+
+    Args:
+        next_page (str): The URL of the page to start scraping from.
+        driver (WebDriver): The Selenium WebDriver used for navigating pages.
+        webdriver_timeout (int): Maximum wait time for elements to load.
+        db_session (Session): The database session used for saving products.
+        timestamp (datetime): The timestamp for when data was last updated.
+
+    Returns:
+        None
+    """
     driver.get(next_page)
     WebDriverWait(driver, webdriver_timeout).until(
         lambda e: e.find_element(By.CSS_SELECTOR, ".min-vh-100 > script")
@@ -116,6 +144,17 @@ register_scraper_pair(
 
 
 def save_to_db(product_list, db_session):
+    """
+    Saves or updates a list of products in the database.
+
+    Args:
+        product_list (List[dict]): A list of dictionaries containing product details.
+        db_session (Session): The database session used to execute queries and commit
+            changes.
+
+    Returns:
+        None
+    """
     products = [Product(**product_data) for product_data in product_list]
 
     for product in products:
@@ -137,6 +176,19 @@ def save_to_db(product_list, db_session):
 
 
 def normalize_str(input: str) -> str:
+    """
+    Normalizes a string by removing accent marks and diacritical marks.
+
+    Args:
+        input (str): The input string to normalize.
+
+    Returns:
+        str: The normalized string with accent marks removed.
+
+    Example:
+        >>> normalize_str("café")
+        'cafe'
+    """
     return "".join(
         [
             c
