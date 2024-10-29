@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Define an array of popular supermarket items in Spanish
 keywords=(
     "arroz" "aceite" "azúcar" "leche" "huevos" "harina" "pan" "pasta" "café" "té"
     "mantequilla" "queso" "yogur" "pollo" "carne" "pescado" "tomate" "cebolla"
@@ -31,7 +30,6 @@ keywords=(
     "paraguas" "reloj" "bolso" "maleta" "cartera" "monedero" "camisa" "pantalones"
 )
 
-# Base URL for the FastAPI endpoint
 base_url="http://localhost:8000/product"
 
 # Iterate over each keyword in the list and make a GET request
@@ -39,7 +37,6 @@ for keyword in "${keywords[@]}"; do
     # Encode the keyword for the URL
     encoded_keyword=$(echo -n "$keyword" | jq -sRr @uri)
 
-    # Make the curl request
     response=$(curl -s -X 'GET' \
       "$base_url/$encoded_keyword" \
       -H 'accept: application/json')
@@ -48,6 +45,5 @@ for keyword in "${keywords[@]}"; do
     echo "$response"
     echo "-----------------------------"
 
-    # Small delay to avoid overwhelming the server (optional)
     sleep 0.5
 done
